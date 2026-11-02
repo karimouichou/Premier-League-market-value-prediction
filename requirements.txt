@@ -1,0 +1,11 @@
+pandas>=2.0
+numpy>=1.24
+scikit-learn>=1.3
+matplotlib>=3.7
+# optional: enables the XGBoost comparison and SHAP plot in src/04_improve.py
+xgboost>=2.0
+shap>=0.44
+# only needed for src/scrape_transfermarkt_pl.py (optional data collection step)
+requests>=2.31
+beautifulsoup4>=4.12
+lxml>=4.9

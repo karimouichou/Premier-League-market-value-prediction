@@ -1,0 +1,48 @@
+=== STEP 1: AUDIT ===
+Rows x cols: (507, 109)
+Duplicate rows: 0 | duplicate player_id: 0
+Teams: 20
+Players per position (G/D/M/F):
+position_stats
+M    201
+D    171
+F    100
+G     35
+Market value (EUR) summary:
+count          507.0
+mean      24446154.0
+std       22980852.0
+min         150000.0
+25%        8000000.0
+50%       18000000.0
+75%       30000000.0
+max      200000000.0
+Zero/negative values: 0 | skew raw=2.10, log=-1.12
+Players under 450 min: 124
+Columns with missing values:
+expectedAssists      5
+expectedGoals       79
+goalsPrevented     473
+
+=== STEP 2: CLEAN & FILTER ===
+Filled NaN in expectedGoals / expectedAssists / goalsPrevented with 0 (no shots tracked, or goalkeeper-only metric)
+Kept players with >= 450 minutes: 383 of 507
+Remaining per position:
+position_stats
+M    150
+D    137
+F     70
+G     26
+WARNING: fewer than 30 goalkeepers -> too few for a separate GK model; keep GK in the shared model with position interactions.
+Dropped redundant columns: ['id', 'goalsAssistsSum', 'inaccuratePasses', 'scoringFrequency', 'attemptPenaltyMiss', 'attemptPenaltyTarget', 'leftFootGoals', 'rightFootGoals', 'tacklesWon', 'totalContest', 'totwAppearances']
+
+=== STEP 3: FEATURE ENGINEERING ===
+Per-90 counting stats: 76 | percentage columns: 11
+Interaction features: 18
+Final table: 383 players x 128 columns (~121 features)
+
+Spearman correlation with log_value, by position (top 5 each):
+  GK: age (-0.78), age_sq (-0.78), cleanSheet_rate (+0.65), goalKicks_p90 (-0.57), goalsPrevented_p90 (+0.52)
+  DEF: age (-0.57), age_sq (-0.57), accuratePassesPercentage (+0.44), accurateOppositionHalfPasses_p90 (+0.43), rating (+0.42)
+  MID: age (-0.50), age_sq (-0.50), successfulDribbles_p90 (+0.44), rating (+0.43), minutes (+0.42)
+  FWD: minutes (+0.43), xG_xA_p90 (+0.40), cleanSheet_rate (+0.39), start_ratio (+0.38), age_sq (-0.37)

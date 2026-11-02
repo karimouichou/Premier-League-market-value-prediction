@@ -1,0 +1,16 @@
+model,group,MAE_log,RMSE_log,R2_log,MAE_eur_M,MedAPE_pct,MAE_log_sd,R2_log_sd
+baseline: position median,baseline,0.728,1.032,0.021,16.41,47.778,0.005,0.01
+baseline: age+pos+minutes only [ridge],baseline,0.468,0.604,0.665,12.285,36.524,0.004,0.004
+baseline: age+pos+minutes only [gbm],baseline,0.507,0.648,0.614,12.948,39.908,0.014,0.022
+ridge [full],pooled,0.427,0.576,0.695,10.124,31.709,0.004,0.005
+rf [full],pooled,0.41,0.561,0.711,10.095,28.894,0.003,0.008
+gbm [full],pooled,0.381,0.517,0.754,9.108,27.895,0.002,0.015
+ridge [no_rating],pooled,0.432,0.581,0.69,10.37,31.816,0.007,0.007
+rf [no_rating],pooled,0.415,0.565,0.707,10.261,30.871,0.003,0.011
+gbm [no_rating],pooled,0.384,0.514,0.757,9.266,28.859,0.002,0.011
+ridge [no_interactions],pooled,0.426,0.574,0.697,10.196,31.629,0.007,0.016
+rf [no_interactions],pooled,0.41,0.559,0.713,10.067,29.572,0.004,0.009
+gbm [no_interactions],pooled,0.382,0.517,0.754,9.123,28.193,0.002,0.01
+ridge [per-position],per-position,0.494,0.68,0.575,11.602,34.13,0.008,0.011
+rf [per-position],per-position,0.484,0.663,0.596,11.262,34.417,0.001,0.008
+gbm [per-position],per-position,0.452,0.615,0.652,10.318,32.81,0.003,0.015

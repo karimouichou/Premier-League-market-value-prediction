@@ -1,0 +1,9 @@
+position,approach,n,MAE_log,MAE_eur_M
+GK,pooled,26,0.468,4.727
+GK,per-position,26,0.776,8.326
+DEF,pooled,137,0.358,7.087
+DEF,per-position,137,0.408,7.868
+MID,pooled,150,0.34,9.653
+MID,per-position,150,0.351,9.893
+FWD,pooled,70,0.422,12.42
+FWD,per-position,70,0.574,15.578

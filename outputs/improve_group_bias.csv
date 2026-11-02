@@ -1,0 +1,29 @@
+model,group,n,mean_signed_err_log,MAE_log
+A  baseline gbm,Burnley players,21,0.733,0.787
+A  baseline gbm,Value >= €60M,45,-0.359,0.382
+A  baseline gbm,Age >= 33,38,0.172,0.612
+A  baseline gbm,Everyone else,281,-0.029,0.306
+B  + team context (stats only),Burnley players,21,0.145,0.524
+B  + team context (stats only),Value >= €60M,45,-0.303,0.347
+B  + team context (stats only),Age >= 33,38,0.159,0.608
+B  + team context (stats only),Everyone else,281,0.011,0.279
+C  B + teammates' value level (in-fold),Burnley players,21,0.116,0.524
+C  B + teammates' value level (in-fold),Value >= €60M,45,-0.281,0.336
+C  B + teammates' value level (in-fold),Age >= 33,38,0.169,0.624
+C  B + teammates' value level (in-fold),Everyone else,281,-0.0,0.267
+D  B + tuned gbm,Burnley players,21,0.157,0.537
+D  B + tuned gbm,Value >= €60M,45,-0.305,0.35
+D  B + tuned gbm,Age >= 33,38,0.158,0.614
+D  B + tuned gbm,Everyone else,281,0.009,0.28
+E  blend: 50% ridge + 50% tuned gbm,Burnley players,21,0.32,0.479
+E  blend: 50% ridge + 50% tuned gbm,Value >= €60M,45,-0.275,0.358
+E  blend: 50% ridge + 50% tuned gbm,Age >= 33,38,0.368,0.65
+E  blend: 50% ridge + 50% tuned gbm,Everyone else,281,-0.031,0.281
+"   + teammates' value level, tuned gbm",Burnley players,21,0.124,0.517
+"   + teammates' value level, tuned gbm",Value >= €60M,45,-0.275,0.345
+"   + teammates' value level, tuned gbm",Age >= 33,38,0.159,0.613
+"   + teammates' value level, tuned gbm",Everyone else,281,-0.004,0.267
+XGBoost on B,Burnley players,21,0.21,0.504
+XGBoost on B,Value >= €60M,45,-0.326,0.351
+XGBoost on B,Age >= 33,38,0.257,0.591
+XGBoost on B,Everyone else,281,0.009,0.281
