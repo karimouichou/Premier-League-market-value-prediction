@@ -11,6 +11,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import plotly.express as px
+import plotly.io as pio
 import plotly.graph_objects as go
 import streamlit as st
 from sklearn.ensemble import GradientBoostingRegressor
@@ -18,12 +19,17 @@ from sklearn.ensemble import GradientBoostingRegressor
 ROOT = Path(__file__).resolve().parent
 OUT = ROOT / "outputs"
 
-PURPLE, GREY = "#3d195b", "#9a9a95"
-POS_COLORS = {"GK": "#e8590c", "DEF": "#2a78d6", "MID": "#2f9e44", "FWD": "#a31d8a"}
+# EA-FC-style palette: deep navy, neon green / cyan accents, gold for the player card
+BG, PANEL, PANEL2, LINE = "#080c18", "#111a2f", "#16213b", "#24325a"
+ACCENT, ACCENT2, GOLD = "#00ff87", "#3ee6ff", "#f5c542"
+INK, MUTED = "#f2f5ff", "#8b95b0"
+GREY = MUTED
+POS_COLORS = {"GK": "#ffb02e", "DEF": "#3ea6ff", "MID": "#00ff87", "FWD": "#ff4d8d"}
 POSITIONS = ["GK", "DEF", "MID", "FWD"]
 CTX = ["team_rating", "team_cleansheet", "team_goal_rate"]
 NON_FEATURES = {"player_id", "player_name", "team_name", "position_stats", "position",
                 "market_value_eur", "log_value"}
+FONT = "Barlow, 'Segoe UI', sans-serif"
 
 # Same position x stat interactions as src/01_clean_and_features.py
 KEY_STATS = {
@@ -53,14 +59,80 @@ SLIDERS = {
 }
 
 st.set_page_config(page_title="PL Market Value", page_icon="⚽", layout="wide")
+
+# Plotly: one dark template for every chart
+_tpl = go.layout.Template(pio.templates["plotly_dark"])
+_tpl.layout.update(
+    paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+    font=dict(family=FONT, color=INK, size=14),
+    colorway=[ACCENT, ACCENT2, GOLD, "#ff4d8d", "#3ea6ff", "#ffb02e"],
+    xaxis=dict(gridcolor=LINE, zerolinecolor=LINE, linecolor=LINE),
+    yaxis=dict(gridcolor=LINE, zerolinecolor=LINE, linecolor=LINE),
+    title=dict(font=dict(family="Barlow Condensed, sans-serif", size=22)),
+    hoverlabel=dict(bgcolor=PANEL2, font_family=FONT),
+)
+pio.templates["fc"] = _tpl
+pio.templates.default = "fc"
+
 st.markdown(
     f"""<style>
-    .block-container {{padding-top: 2rem; max-width: 1250px;}}
-    h1, h2, h3 {{color: {PURPLE};}}
-    [data-testid="stMetricValue"] {{color: {PURPLE};}}
+    @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Barlow:wght@400;500;600&display=swap');
+    html, body, [class*="css"], .stMarkdown, p, label, li {{font-family: {FONT};}}
+    .stApp {{background: radial-gradient(1200px 600px at 85% -10%, #12306a55 0%, transparent 60%),
+                         radial-gradient(900px 500px at -10% 10%, #00ff8718 0%, transparent 55%), {BG};}}
+    .block-container {{padding-top: 2.2rem; max-width: 1250px;}}
+    h1, h2, h3, h4 {{font-family: 'Barlow Condensed', sans-serif !important; text-transform: uppercase;
+                     letter-spacing: .04em; color: {INK}; font-weight: 800;}}
+    h1 {{font-size: 3rem !important; line-height: 1;
+         background: linear-gradient(90deg, {INK} 30%, {ACCENT} 100%); -webkit-background-clip: text;
+         -webkit-text-fill-color: transparent;}}
+    h2, h3 {{border-left: 4px solid {ACCENT}; padding-left: .6rem;}}
+    [data-testid="stCaptionContainer"] {{color: {MUTED};}}
+    /* metric cards */
+    [data-testid="stMetric"] {{background: linear-gradient(160deg, {PANEL2}, {PANEL}); border: 1px solid {LINE};
+        border-radius: 14px; padding: 14px 18px; box-shadow: 0 6px 24px #0007;}}
+    [data-testid="stMetricLabel"] p {{text-transform: uppercase; letter-spacing: .08em; color: {MUTED};
+        font-weight: 600; font-size: .8rem;}}
+    [data-testid="stMetricValue"] {{font-family: 'Barlow Condensed', sans-serif; font-weight: 800;
+        font-size: 2.4rem; color: {ACCENT};}}
+    /* sidebar */
+    [data-testid="stSidebar"] {{background: linear-gradient(180deg, #0c1530, {BG}); border-right: 1px solid {LINE};}}
+    [data-testid="stSidebar"] [role="radiogroup"] label {{padding: 6px 10px; border-radius: 8px;}}
+    [data-testid="stSidebar"] [role="radiogroup"] label:hover {{background: {PANEL2};}}
+    /* tabs */
+    button[data-baseweb="tab"] {{font-family: 'Barlow Condensed', sans-serif; font-size: 1.15rem; font-weight: 700;
+        text-transform: uppercase; letter-spacing: .06em;}}
+    /* tables / images / alerts */
+    [data-testid="stDataFrame"], [data-testid="stImage"] img, [data-testid="stPlotlyChart"] {{border-radius: 12px;}}
+    [data-testid="stImage"] img {{border: 1px solid {LINE};}}
+    [data-testid="stAlert"] {{border-radius: 12px; border: 1px solid {LINE};}}
+    hr {{border-color: {LINE};}}
+    /* FUT-style player card */
+    .fut {{position: relative; border-radius: 18px 18px 40px 40px; padding: 22px 22px 26px; text-align: center;
+        background: linear-gradient(155deg, #2b2410 0%, #4a3a12 35%, #1a1608 100%); border: 2px solid {GOLD};
+        box-shadow: 0 0 32px #f5c54233, inset 0 0 40px #f5c54222; margin-bottom: 14px;}}
+    .fut .val {{font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 4.2rem; line-height: 1;
+        color: {GOLD}; text-shadow: 0 0 18px #f5c54255;}}
+    .fut .pos {{display: inline-block; font-family: 'Barlow Condensed'; font-weight: 800; font-size: 1.3rem;
+        letter-spacing: .12em; color: #0b0b0b; padding: 2px 14px; border-radius: 6px; margin: 4px 0 10px;}}
+    .fut .name {{font-family: 'Barlow Condensed'; font-weight: 800; font-size: 1.7rem; text-transform: uppercase;
+        letter-spacing: .06em; color: {INK}; border-top: 1px solid #f5c54255; border-bottom: 1px solid #f5c54255;
+        padding: 6px 0; margin-bottom: 8px;}}
+    .fut .sub {{color: #d9cfa8; font-size: .95rem; letter-spacing: .04em;}}
+    .fut .range {{margin-top: 10px; color: {ACCENT}; font-weight: 600; font-size: .95rem;}}
     </style>""",
     unsafe_allow_html=True,
 )
+
+
+def player_card(name, sub, pos, value, rng):
+    st.markdown(
+        f"""<div class="fut"><div class="val">{value}</div>
+        <div class="pos" style="background:{POS_COLORS[pos]}">{pos}</div>
+        <div class="name">{name}</div><div class="sub">{sub}</div>
+        <div class="range">80% range · {rng}</div></div>""",
+        unsafe_allow_html=True,
+    )
 
 
 # ----------------------------------------------------------------------------
@@ -74,7 +146,7 @@ def eur(x: float) -> str:
 
 
 def show(fig):
-    st.plotly_chart(fig, width="stretch")
+    st.plotly_chart(fig, width="stretch", theme=None)
 
 
 # ----------------------------------------------------------------------------
@@ -154,7 +226,7 @@ def residual_quantiles():
 # Pages
 # ----------------------------------------------------------------------------
 def page_overview():
-    st.title(" Premier League market value predictor")
+    st.title("⚽ Premier League market value predictor")
     st.caption("2025/26 season · 383 players with 450+ minutes · target: Transfermarkt market value")
     st.write(
         "Can a player's season statistics, age and position explain his Transfermarkt market value? "
@@ -185,7 +257,7 @@ def page_overview():
         rows = rows.sort_values("MAE_eur_M", ascending=False)
         fig = px.bar(rows, x="MAE_eur_M", y="model", orientation="h", text=rows.MAE_eur_M.map(lambda v: f"€{v:.1f}M"),
                      labels={"MAE_eur_M": "Average miss (€M, out-of-fold)", "model": ""})
-        fig.update_traces(marker_color=PURPLE, textposition="outside")
+        fig.update_traces(marker_color=ACCENT, textposition="outside", textfont_color=INK)
         fig.update_layout(height=380, margin=dict(l=0, r=30, t=10, b=0))
         show(fig)
     with right:
@@ -289,15 +361,18 @@ def page_predict():
 
     with res:
         st.subheader("Estimated value")
-        st.metric("Model estimate", eur(est))
-        st.caption(f"80% range: {eur(low)} – {eur(high)}")
+        if idx is not None:
+            card_name, card_sub = base_row["player_name"], f"{base_row['team_name']} · age {age}"
+        else:
+            card_name, card_sub = f"Typical {pos}", f"age {age} · {team_choice}"
+        player_card(card_name, card_sub, pos, eur(est), f"{eur(low)} – {eur(high)}")
         if idx is not None:
             tm = base_row["market_value_eur"]
             st.metric("Transfermarkt value", eur(tm), f"{(est / tm - 1) * 100:+.0f}% model vs. market",
                       delta_color="off")
             fig = go.Figure()
-            fig.add_trace(go.Bar(x=[tm], y=[""], orientation="h", marker_color=GREY, name="Transfermarkt"))
-            fig.add_trace(go.Bar(x=[est], y=[" "], orientation="h", marker_color=PURPLE, name="Model"))
+            fig.add_trace(go.Bar(x=[tm], y=[""], orientation="h", marker_color=MUTED, name="Transfermarkt"))
+            fig.add_trace(go.Bar(x=[est], y=[" "], orientation="h", marker_color=ACCENT, name="Model"))
             fig.update_layout(height=150, margin=dict(l=0, r=0, t=0, b=0), showlegend=True, barmode="group",
                               xaxis_title="€")
             show(fig)
@@ -305,9 +380,9 @@ def page_predict():
         # Value-by-age curve for this stat line
         ages = list(range(18, 39))
         curve = [estimate(derive({**row, "age": a}), team_choice) / 1e6 for a in ages]
-        fig = go.Figure(go.Scatter(x=ages, y=curve, mode="lines", line=dict(color=PURPLE, width=3),
+        fig = go.Figure(go.Scatter(x=ages, y=curve, mode="lines", line=dict(color=ACCENT, width=4),
                                    name="Model value"))
-        fig.add_trace(go.Scatter(x=[age], y=[est / 1e6], mode="markers", marker=dict(size=12, color="#e8590c"),
+        fig.add_trace(go.Scatter(x=[age], y=[est / 1e6], mode="markers", marker=dict(size=13, color=GOLD),
                                  name="Current age"))
         fig.update_layout(title="Same stat line at different ages", height=300, margin=dict(l=0, r=0, t=40, b=0),
                           xaxis_title="Age", yaxis_title="Value (€M)", showlegend=False)
@@ -338,14 +413,14 @@ def page_explorer():
                      log_x=True, log_y=True,
                      labels={"actual_M": "Transfermarkt value (€M)", "pred_M": "Model value (€M)"})
     lim = [0.1, 250]
-    fig.add_trace(go.Scatter(x=lim, y=lim, mode="lines", line=dict(color=GREY, dash="dash"), showlegend=False,
+    fig.add_trace(go.Scatter(x=lim, y=lim, mode="lines", line=dict(color=MUTED, dash="dash"), showlegend=False,
                              hoverinfo="skip"))
     hl = st.selectbox("Highlight a player", [""] + sorted(d.player_name.tolist()))
     if hl:
         p = d[d.player_name == hl].iloc[0]
         fig.add_trace(go.Scatter(x=[p.actual_M], y=[p.pred_M], mode="markers+text", text=[hl],
                                  textposition="top center", marker=dict(size=16, color="rgba(0,0,0,0)",
-                                                                        line=dict(color="black", width=2)),
+                                                                        line=dict(color=GOLD, width=3)),
                                  showlegend=False, hoverinfo="skip"))
     fig.update_layout(height=560, margin=dict(l=0, r=0, t=10, b=0))
     show(fig)
@@ -412,11 +487,11 @@ def page_scouting():
         fig = go.Figure()
         for _, r in t.iterrows():
             fig.add_trace(go.Scatter(x=[r.market_M, r.model_M], y=[r.player_name] * 2, mode="lines",
-                                     line=dict(color="#d0cfc9", width=3), showlegend=False, hoverinfo="skip"))
+                                     line=dict(color=LINE, width=4), showlegend=False, hoverinfo="skip"))
         fig.add_trace(go.Scatter(x=t.market_M, y=t.player_name, mode="markers", name="Transfermarkt",
                                  marker=dict(color=GREY, size=11)))
         fig.add_trace(go.Scatter(x=t.model_M, y=t.player_name, mode="markers", name="Model (stats)",
-                                 marker=dict(color=PURPLE, size=11)))
+                                 marker=dict(color=ACCENT, size=12)))
         fig.update_layout(title=title, height=max(320, 28 * len(t) + 120), xaxis_title="Value (€M)",
                           margin=dict(l=0, r=0, t=50, b=0), legend=dict(orientation="h", y=-0.12))
         show(fig)
@@ -457,7 +532,7 @@ def page_insights():
         fig = px.bar(top, x="mae_increase_log", y="feature", orientation="h",
                      labels={"mae_increase_log": "Increase in error when shuffled (log MAE)", "feature": ""},
                      title="Permutation importance (held-out folds, baseline model)")
-        fig.update_traces(marker_color=PURPLE)
+        fig.update_traces(marker_color=ACCENT)
         fig.update_layout(height=480, margin=dict(l=0, r=0, t=50, b=0))
         show(fig)
         st.markdown("**SHAP summary** (team-context model): right = pushes value up, left = down (log scale).")
@@ -518,7 +593,8 @@ PAGES = {
 }
 
 with st.sidebar:
-    st.markdown(f"<h3 style='color:{PURPLE};margin-bottom:0'> PL Market Value</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='margin-bottom:0'>⚽ PL Market Value</h3>", unsafe_allow_html=True)
+    st.caption("2025/26 · Transfermarkt vs. stats")
     page = st.radio("Navigate", list(PAGES), label_visibility="collapsed")
     st.divider()
 

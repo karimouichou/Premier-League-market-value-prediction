@@ -9,3 +9,6 @@ shap>=0.44
 requests>=2.31
 beautifulsoup4>=4.12
 lxml>=4.9
+# only needed for the Streamlit app (app.py)
+streamlit>=1.50
+plotly>=5.20
